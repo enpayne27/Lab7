@@ -69,6 +69,7 @@ int main(void)
 	char Test[] = "StartUp";
 	unsigned int Mask = BridgeResponseID(Test);
 	switch(Mask){
+<<<<<<< HEAD
 		case StartUp:{
 			char Input = "{\"Action\":\"WifiSetup\", \"Wifi\":{\"SSID\":\"KSUGuest\", \"Password\":\"\"}}”;
 			char ResponseStr[400];
@@ -106,6 +107,30 @@ int main(void)
 			printf("Bad ID\n");
 			break;
 		}
+=======
+	case StartUp:{
+		break;
+	}
+	case WifiStatus:{
+		break;
+	}
+	case MQTTSetup:{
+		break;
+	}
+	case MQTTPub:{
+		break;
+	}
+	case MQTTSubs:{
+		break;
+	}
+	case SubscribedMessage:{
+		break;
+	}
+	default:{
+		printf("Bad ID\n");
+		break;
+	}
+>>>>>>> d5042cb965182b94d7766a351c45e2274403f497
 	}
 	return EXIT_SUCCESS;
 }
