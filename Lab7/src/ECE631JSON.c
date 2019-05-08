@@ -12,7 +12,7 @@ Date: April 25, 2017
 #include <stdarg.h>
 #include <stdio.h>
 
-
+//Removes the escape characters from given string
 void RemoveEscapes(char* CheckString){
 	int head;
 	int tail=0;
@@ -57,6 +57,7 @@ void extract_value(char* JSONSTR, char* key, char *target, int numtok1, jsmntok_
 		}
 	}
 }
+//Formats given inputs into a JSON string
 //Works similar to printf: example format string "{s:b,s:{s:[n,n,n,n]}}"
 //b is bool, n is float, s is string
 int pack_json(char* format, char* target, ...){
@@ -149,6 +150,8 @@ int check_JSMN_error(int numtok, char* location) {
 	return 0;
 }
 
+//Reads through the inputted JSON string (JSONStr) for the chosen string "Name"
+//to save the placement of the succeeding string in "Result".
 void GetNameValue(char* JSONStr, char* Name, char* Result){
 	//Example:
 	//char Input = "{\"Response\":\"StartUp\":{\"Version\":\"1.2.3\"}};
