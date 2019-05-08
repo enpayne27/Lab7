@@ -33,27 +33,33 @@ void RemoveEscapes(char* CheckString){
 	}
 	CheckString[tail]=0x0;
 }
-
-void extract_value(char* JSONSTR, char* key, char *target, int numtok1, jsmntok_t *tokens1) {//extract the JSON value associated with the specified key string
+//Extracts the JSON value associated with the specified key string
+void extract_value(char* JSONSTR, char* key, char *target, int numtok1, jsmntok_t *tokens1) {
 //NOTE: this function does not parse MULTIPLE NESTED JSON LAYERS
 //A nested JSON string will be returned as a string, not as its contained JSON values
 //to parse nested strings, this function will need to be called multiple times
 	char output1[256];
 	int i;
-	for (i = 0; i < numtok1; i++) {//Loop through all the tokens
-		memcpy(output1, (const char*)&JSONSTR[tokens1[i].start], abs(tokens1[i].start - tokens1[i].end));//copy the token of interest into a separate string
+	//Loop through all the tokens
+	for (i = 0; i < numtok1; i++) {
+		//copy the token of interest into a separate string
+		memcpy(output1, (const char*)&JSONSTR[tokens1[i].start], abs(tokens1[i].start - tokens1[i].end));
 		output1[abs(tokens1[i].start - tokens1[i].end)] = '\0';
-		if (strcmp(output1, key) == 0) {//Check to see if the token matches the specified key
-			memcpy(target, &JSONSTR[tokens1[i + 1].start], abs(tokens1[i + 1].start - tokens1[i + 1].end));//copy the response type information into the target string location
-			target[abs(tokens1[i + 1].start - tokens1[i + 1].end)] = '\0';//terminate the target string
+		//Check to see if the token matches the specified key
+		if (strcmp(output1, key) == 0) {
+			//copy the response type information into the target string location
+			memcpy(target, &JSONSTR[tokens1[i + 1].start], abs(tokens1[i + 1].start - tokens1[i + 1].end));
+			//terminate the target string
+			target[abs(tokens1[i + 1].start - tokens1[i + 1].end)] = '\0';
 			if (tokens1[i].type==JSMN_STRING){
 				RemoveEscapes(target);
 			}
 		}
 	}
 }
-
-int pack_json(char* format, char* target, ...){//works similar to printf: example format string "{s:b,s:{s:[n,n,n,n]}}"  b is bool, n is float, s is string
+//Works similar to printf: example format string "{s:b,s:{s:[n,n,n,n]}}"
+//b is bool, n is float, s is string
+int pack_json(char* format, char* target, ...){
 	char* s;
 	long numb;
 	char m[100];
@@ -65,10 +71,12 @@ int pack_json(char* format, char* target, ...){//works similar to printf: exampl
 	int j;
 	for (j = 0; j < strlen(format); j++) {
 		if ((format[j] == '{') || (format[j] == '}') || (format[j] == ':') || (format[j] == ',') || (format[j] == '"') || (format[j] == ']') || (format[j] == '[')) {
-			target[z] = format[j];//direct copy valid json characters from format to target
+			//direct copy valid json characters from format to target
+			target[z] = format[j];
 			z++;
 		}
-		else {//retrieve arguments according to the format specifier
+		//retrieve arguments according to the format specifier
+		else {
 			if (format[j] == 's') {
 				s = va_arg(arg, char*);
 				target[z] = '"';
@@ -110,12 +118,13 @@ int pack_json(char* format, char* target, ...){//works similar to printf: exampl
 			}
 		}
 	}
-	va_end(arg);//close the argument list
+	va_end(arg); //close the argument list
 	target[z] = '\0';
 	return 0;
 }
-
-int check_JSMN_error(int numtok, char* location) {//Prints error and error location to the location specified by output_string definition, returns 1 if error is detected
+//Prints error and error location to the location specified by output_string
+//definition, returns 1 if error is detected
+int check_JSMN_error(int numtok, char* location) {
 	if (numtok == JSMN_ERROR_INVAL) {//Error Checking
 		char errorString[50] = "ERROR:INVALID JSON IN ";
 		strcat(errorString, location);
@@ -145,7 +154,6 @@ void GetNameValue(char* JSONStr, char* Name, char* Result){
 	//char Input = "{\"Response\":\"StartUp\":{\"Version\":\"1.2.3\"}};
 	//char ResponseStr[400];
 	//GetNameValue(Input, "Response", ResponseStr);
-	//
 	jsmn_parser parser;
 	jsmntok_t tokens[50];
 	int numtok = 0;
@@ -153,18 +161,19 @@ void GetNameValue(char* JSONStr, char* Name, char* Result){
 
 	jsmn_init(&parser);//reset parser, parser must be reset for each new string
 
-	numtok = jsmn_parse(&parser, JSONStr, strlen(JSONStr), tokens, 50);//tokenize JSON string
-
-	if (check_JSMN_error(numtok, "MAIN")) {//Error Checking
+	numtok = jsmn_parse(&parser, JSONStr, strlen(JSONStr), tokens, 50); //tokenize JSON string
+	//Error Checking
+	if (check_JSMN_error(numtok, "MAIN")) {
 		Result[0] = '\0';
 		return;
 		//continue;
 	}
-
-	extract_value(JSONStr,Name,Result,numtok,tokens);//the JSON value associated with the key 	}
+	//the JSON value associated with the key
+	extract_value(JSONStr,Name,Result,numtok,tokens);
 }
-
-void output_string(char* s) {//redefine this to fit whatever system you're working on
-//this function needs to direct the string s to your desired output location for error information
+//Redefine this to fit whatever system you're working on.
+//This function needs to direct the string s to your desired output location for
+//error information
+void output_string(char* s) {
 	//putStr(&Tx,s,strlen(s));
 }

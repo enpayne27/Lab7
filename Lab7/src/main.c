@@ -1,9 +1,9 @@
-/**UART Sample Project
+/* Lab 7
   ******************************************************************************
   * @file    main.c
-  * @author  Ac6
+  * @author  Erin Payne
   * @version V1.0
-  * @date    01-December-2013
+  * @date    8-May-2019
   * @brief   Default main function.
   ******************************************************************************
 */
@@ -16,6 +16,7 @@
 #include "circularBuffer.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "SerialWifiBridge"
 
 static uint32_t USARTCount = 0;
 static commBuffer_t RX;
@@ -24,12 +25,13 @@ static commBuffer_t TX;
 int main(void)
 {
 	HAL_Init();
-	/* Configure the System clock to have a frequency of 80 MHz */
+	// Configure the System clock to have a frequency of 80 MHz
 	SystemClock_Config();
 
-	/* Configure UART4 */
+	// Configure UART4
 	Configure_USART();
 
+	// Startup test text
 	char* text = "\nChip programmed successfully\n";
 	SendCharArrayUSART4(text,strlen(text));
 
@@ -40,100 +42,62 @@ int main(void)
 	while(1){
 		// Create string to hold incoming message
 		char message[MAXCOMMBUFFER] = "";
+		char Test[] = "StartUp";
+		unsigned int Mask = BridgeResponseID(Test);
 
 		// Check if there is a message in the receiving buffer
 		if(haveMessage(&RX)){
 			// If message available, get it from the receiving buffer
 			getMessage(&RX, message);
+			// Check message for corresponding response message
+			switch(Mask){
+				case StartUp:{
+					//GetNameValue(Input, "Response", ResponseStr);
+					GetNameValue();
+					break;
+				}
+				case WifiStatus:{
+					if(null){
+
+					}
+					else if(false){
+
+					}
+					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+					printf("JSON String: %s\n\r",JSONStr);
+					break;
+				}
+				case MQTTSetup:{
+					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+					printf("JSON String: %s\n\r",JSONStr);
+					break;
+				}
+				case MQTTPub:{
+					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+					printf("JSON String: %s\n\r",JSONStr);
+					break;
+				}
+				case MQTTSubs:{
+					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+					printf("JSON String: %s\n\r",JSONStr);
+					break;
+				}
+				case SubscribedMessage:{
+					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+					printf("JSON String: %s\n\r",JSONStr);
+					break;
+				}
+				default:{
+					printf("Bad ID\n");
+					break;
+				}
+
 			// and put it into the transmitting buffer
 			putMessage(&TX, message, strlen(message));
 			// Now that message is available, reenable interrupts for Tx buffer
 			LL_USART_EnableIT_TXE(USARTx_INSTANCE);
 		}
 	}
-///////// Test1.c
-	printf("Here are the Serial Wifi Bridge Responses and IDs\n");
-	printf("Response -- ID\n");
-	for(int i=0;i<TotalResponses;i++){
-		printf("%s -- %d\n",ResponseItems[i].Name,ResponseItems[i].ID);
-	}
-	/*
-	StartUp -- 1
-	WifiStatus -- 2
-	MQTTSetup -- 4
-	MQTTPub -- 8
-	MQTTSubs -- 16
-	SubscribedMessage -- 32
-	*/
-	// Response Type Example
-	char Test[] = "StartUp";
-	unsigned int Mask = BridgeResponseID(Test);
-	switch(Mask){
-<<<<<<< HEAD
-		case StartUp:{
-			char Input = "{\"Action\":\"WifiSetup\", \"Wifi\":{\"SSID\":\"KSUGuest\", \"Password\":\"\"}}”;
-			char ResponseStr[400];
-			GetNameValue(Input, "Action", ResponseStr);//ResponseStr will contain “WifiSetup”
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		case WifiStatus:{
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		case MQTTSetup:{
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		case MQTTPub:{
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		case MQTTSubs:{
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		case SubscribedMessage:{
-			pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-			printf("JSON String: %s\n\r",JSONStr);
-			break;
-		}
-		default:{
-			printf("Bad ID\n");
-			break;
-		}
-=======
-	case StartUp:{
-		break;
-	}
-	case WifiStatus:{
-		break;
-	}
-	case MQTTSetup:{
-		break;
-	}
-	case MQTTPub:{
-		break;
-	}
-	case MQTTSubs:{
-		break;
-	}
-	case SubscribedMessage:{
-		break;
-	}
-	default:{
-		printf("Bad ID\n");
-		break;
-	}
->>>>>>> d5042cb965182b94d7766a351c45e2274403f497
-	}
-	return EXIT_SUCCESS;
-}
 /**
   * @brief  System Clock Configuration
   * The system Clock is configured as follow :
@@ -169,6 +133,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLP = 7;
   RCC_OscInitStruct.PLL.PLLQ = 4;
+
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     /* Initialization Error */
@@ -181,6 +146,7 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     /* Initialization Error */

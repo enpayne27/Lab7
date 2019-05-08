@@ -1,7 +1,7 @@
 /*
  ============================================================================
  Name        : Test1.c
- Author      : 
+ Author      :
  Version     :
  Copyright   : Your copyright notice
  Description : Hello World in C, Ansi-style
@@ -32,20 +32,20 @@ int main(void) {
 	 Example of pack_json
 	*/
 	{
-	char JSONStr[500];
-	//{"Action":"WifiSetup","Wifi":{"SSID":"KSU Guest","Password":"","UpdateInterval":7}}
-	pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, "Action","WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-	printf("JSON String: %s\n\r",JSONStr);
+		char JSONStr[500];
+		//{"Action":"WifiSetup","Wifi":{"SSID":"KSU Guest","Password":"","UpdateInterval":7}}
+		pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, "Action","WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
+		printf("JSON String: %s\n\r",JSONStr);
 	}
 	{
-	//{"Action":"MQTTPub","MQTT":{"Topic":"Topic String","Message":"Needs to Be JSON String"}}
-	//Needs to JSON String == {"Temperature":3400,"Unit":"F"}
-	char JSONStr[500];
-	char JSONStr1[500];
-	int Temp = 1<<31;
-	pack_json("{s:n,s:s,s:b}", JSONStr1, "Temperature",Temp,"Unit","F","IsHeatOn","true");
-	pack_json("{s,s:{s:s,s:s}}", JSONStr, "Action","MQTTPub","Topic","room.living","Message",JSONStr1);
-	printf("JSON String: %s\n\r",JSONStr);
+		//{"Action":"MQTTPub","MQTT":{"Topic":"Topic String","Message":"Needs to Be JSON String"}}
+		//Needs to JSON String == {"Temperature":3400,"Unit":"F"}
+		char JSONStr[500];
+		char JSONStr1[500];
+		int Temp = 1<<31;
+		pack_json("{s:n,s:s,s:b}", JSONStr1, "Temperature",Temp,"Unit","F","IsHeatOn","true");
+		pack_json("{s,s:{s:s,s:s}}", JSONStr, "Action","MQTTPub","Topic","room.living","Message",JSONStr1);
+		printf("JSON String: %s\n\r",JSONStr);
 	}
 	return EXIT_SUCCESS;
 }
