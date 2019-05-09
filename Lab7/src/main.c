@@ -28,6 +28,10 @@ int main(void)
 	// Configure the System clock to have a frequency of 80 MHz
 	SystemClock_Config();
 
+	//Initializes Buffers
+	initBuffer(&RX, 0);
+	initBuffer(&TX, 1);
+
 	// Configure UART4
 	Configure_USART();
 
@@ -35,56 +39,55 @@ int main(void)
 	char* text = "\nChip programmed successfully\n";
 	SendCharArrayUSART4(text,strlen(text));
 
-	//Initializes Buffers
-	initBuffer(&RX, 0);
-	initBuffer(&TX, 1);
-
 	while(1){
-		// Create string to hold incoming message
-		char message[MAXCOMMBUFFER] = "";
-		char Test[] = "StartUp";
-		unsigned int Mask = BridgeResponseID(Test);
-
 		// Check if there is a message in the receiving buffer
 		if(haveMessage(&RX)){
+			// Create string to hold incoming message
+			char input[MAXCOMMBUFFER] = "";
 			// If message available, get it from the receiving buffer
-			getMessage(&RX, message);
+			getMessage(&RX, input);
+			// Verify initial messages are responses
+			char responseType[] = "Response";
+			char result[300];
+			GetNameValue(input, responseType, result);
+			unsigned int Mask = BridgeResponseID(result);
+
 			// Check message for corresponding response message
 			switch(Mask){
 				case StartUp:{
-					//GetNameValue(Input, "Response", ResponseStr);
-					GetNameValue();
+					//Response: Description and version
 					break;
 				}
 				case WifiStatus:{
-					if(null){
-
-					}
-					else if(false){
-
-					}
-					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-					printf("JSON String: %s\n\r",JSONStr);
+					//Response:"WifiStatus"
+					//Action:
+						//if null send "WifiSetup"
+						//if false - setup but not connected
+						//if true - setup and connected, send "SetupMQTT"
+						char result1[300];
+						char result2[300];
+						GetNameValue(input, "Wifi", result1);
+						GetNameValue(result1, "isGWPingable", result2);
 					break;
 				}
 				case MQTTSetup:{
-					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-					printf("JSON String: %s\n\r",JSONStr);
+					//Response:"MQTTSetup" Success
+					//Action:"MQTTSubs"
 					break;
 				}
-				case MQTTPub:{
-					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-					printf("JSON String: %s\n\r",JSONStr);
+				case MQTTPub:{ //Do we implement?
+					//Response:
+					//Action:
 					break;
 				}
 				case MQTTSubs:{
-					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-					printf("JSON String: %s\n\r",JSONStr);
+					//Response:"MQTTSubs" Subscribed
+					//Action:
 					break;
 				}
 				case SubscribedMessage:{
-					pack_json("{s:s,s:{s:s,s:s,s:n}}", JSONStr, Test,"WifiSetup","Wifi","SSID","ece631Lab","Password","1234567890","UpdateInterval",Interval);
-					printf("JSON String: %s\n\r",JSONStr);
+					//Response:
+					//Action:
 					break;
 				}
 				default:{
