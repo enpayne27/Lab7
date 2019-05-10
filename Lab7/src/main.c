@@ -25,34 +25,39 @@ static commBuffer_t TX;
 int main(void)
 {
 	HAL_Init();
-	// Configure the System clock to have a frequency of 80 MHz
+	//Configure the System clock to have a frequency of 80 MHz
 	SystemClock_Config();
 
 	//Initializes Buffers
 	initBuffer(&RX, 0);
 	initBuffer(&TX, 1);
 
-	// Configure UART4
+	//Configure UART4
 	Configure_USART();
 
-	// Startup test text
+	//Startup test text
 	char* text = "\nChip programmed successfully\n";
 	SendCharArrayUSART4(text,strlen(text));
 
 	while(1){
-		// Check if there is a message in the receiving buffer
+		//Check if there is a message in the receiving buffer
 		if(haveMessage(&RX)){
-			// Create string to hold incoming message
+			//Create string to hold incoming message
 			char input[MAXCOMMBUFFER] = "";
-			// If message available, get it from the receiving buffer
+			//If message available, get it from the receiving buffer
 			getMessage(&RX, input);
-			// Verify initial messages are responses
+
+			//Verify initial messages are responses
 			char responseType[] = "Response";
 			char result[300];
 			GetNameValue(input, responseType, result);
 			unsigned int Mask = BridgeResponseID(result);
 
-			// Check message for corresponding response message
+			char JSONStr1[300];
+			char JSONStr2[300];
+			char message[300];
+
+			//Check message for corresponding response message
 			switch(Mask){
 				case StartUp:{
 					//Response: Description and version
@@ -60,22 +65,42 @@ int main(void)
 				}
 				case WifiStatus:{
 					//Response:"WifiStatus"
+						//Formatted as {"Response":"WifiStatus","Wifi":{"IP": null, "MAC": "a536d748f900", "Gateway": "192.168.1.1", "isGWPingable": false}}
+						GetNameValue(input, "Wifi", JSONStr1); //Grab string within first brackets of JSON
+						GetNameValue(JSONStr1, "isGWPingable", JSONStr2); //Grab string within second brackets of JSON
 					//Action:
-						//if null send "WifiSetup"
-						//if false - setup but not connected
-						//if true - setup and connected, send "SetupMQTT"
-						char result1[300];
-						char result2[300];
-						GetNameValue(input, "Wifi", result1);
-						GetNameValue(result1, "isGWPingable", result2);
+						//Never connected, send "WifiSetup" - if isGWPingable is null
+						if(strstr(JSONStr2, "null")){
+							//Formats string as {"Action":"WifiSetup","Wifi":{"SSID":"ece631Lab","Password":"stm32IOT!"}}
+							pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "WifiSetup", "Wifi", "SSID","ece631Lab", "Password", "stm32IOT!");
+						}
+						//Setup and connected, send "MQTTSetup" - if isGWPingable is true
+						else if(strstr(JSONStr2, "true")){
+							//Formats string as {"Action":"MQTTSetup","MQTT":{"Host":"192.168.1.222","Port":"1883"}}
+							pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTSetup", "MQTT", "Host","192.168.1.222", "Port", "1883");
+						}
+						//Setup but not connected - if isGWPingable is false
+						else{
+							printf("Connection failed. Reconnecting...\n");
+						}
 					break;
 				}
 				case MQTTSetup:{
 					//Response:"MQTTSetup" Success
+						//Formatted as {"Response":"MQTTSetup","Message":{"MQTT":"{\"Result\":\"Success\"}"}}
+						GetNameValue(input, "Message", JSONStr1); //Grab string within first brackets of JSON
+						GetNameValue(JSONStr1, "MQTT", JSONStr2); //Grab string within second brackets of JSON
 					//Action:"MQTTSubs"
+						if(strstr(JSONStr2, "Success")){
+							//Formats string as {"Action":"MQTTSubs","MQTT":{"Topics":["ece631/Topic1","ece631/Topic2","ece631/etc"]}}
+							pack_json("{s:s,s:{s:[s,s,s]}}", message, "Action", "MQTTSubs", "MQTT", "Topics","ece631/Topic1", "ece631/Topic2", "ece631/etc";
+						}
+						else{
+							printf("Could not confirm subscription\n");
+						}
 					break;
 				}
-				case MQTTPub:{ //Do we implement?
+				/*case MQTTPub:{
 					//Response:
 					//Action:
 					break;
@@ -84,20 +109,24 @@ int main(void)
 					//Response:"MQTTSubs" Subscribed
 					//Action:
 					break;
-				}
+				}*/
 				case SubscribedMessage:{
 					//Response:
+						//Formatted as {"Response":"SubscribedMessage","Message":{"MQTT":"String Probably JSON"}}
+						GetNameValue(input, "Message", JSONStr1); //Grab string within first brackets of JSON
+						GetNameValue(JSONStr1, "MQTT", JSONStr2); //Grab string within second brackets of JSON
 					//Action:
+						//Formats string as {"Action":"MQTTPub","MQTT":{"Topic":"Topic String","Message":"ObtainedMessage"}}
+						pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTPub", "MQTT", "Topic", "loopback.json", "Message", JSONStr2);
 					break;
 				}
 				default:{
-					printf("Bad ID\n");
+					printf("Invalid response ID received\n");
 					break;
 				}
-
-			// and put it into the transmitting buffer
+			//and put it into the transmitting buffer
 			putMessage(&TX, message, strlen(message));
-			// Now that message is available, reenable interrupts for Tx buffer
+			//Now that message is available, reenable interrupts for Tx buffer
 			LL_USART_EnableIT_TXE(USARTx_INSTANCE);
 		}
 	}
