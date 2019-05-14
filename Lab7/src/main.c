@@ -16,7 +16,8 @@
 #include "circularBuffer.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "SerialWifiBridge"
+#include "SerialWifiBridge.h"
+#include "ECE631JSON.h"
 
 static uint32_t USARTCount = 0;
 static commBuffer_t RX;
@@ -93,7 +94,7 @@ int main(void)
 					//Action:"MQTTSubs"
 						if(strstr(JSONStr2, "Success")){
 							//Formats string as {"Action":"MQTTSubs","MQTT":{"Topics":["ece631/Topic1","ece631/Topic2","ece631/etc"]}}
-							pack_json("{s:s,s:{s:[s,s,s]}}", message, "Action", "MQTTSubs", "MQTT", "Topics","ece631/Topic1", "ece631/Topic2", "ece631/etc";
+							pack_json("{s:s,s:{s:[s,s,s]}}", message, "Action", "MQTTSubs", "MQTT", "Topics","ece631/Topic1", "ece631/Topic2", "ece631/etc");
 						}
 						else{
 							printf("Could not confirm subscription\n");
@@ -124,12 +125,14 @@ int main(void)
 					printf("Invalid response ID received\n");
 					break;
 				}
+			}
 			//and put it into the transmitting buffer
 			putMessage(&TX, message, strlen(message));
 			//Now that message is available, reenable interrupts for Tx buffer
 			LL_USART_EnableIT_TXE(USARTx_INSTANCE);
 		}
 	}
+}
 /**
   * @brief  System Clock Configuration
   * The system Clock is configured as follow :
