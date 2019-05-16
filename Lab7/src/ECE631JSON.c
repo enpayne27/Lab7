@@ -120,7 +120,7 @@ int pack_json(char* format, char* target, ...){
 		}
 	}
 	va_end(arg); //close the argument list
-	target[z] = '\0';
+	target[z] = '\n';
 	return 0;
 }
 //Prints error and error location to the location specified by output_string

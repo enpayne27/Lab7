@@ -40,7 +40,22 @@ int main(void)
 	char* text = "\nChip programmed successfully\n";
 	SendCharArrayUSART4(text,strlen(text));
 
+	//Initialization steps for LED
+	BSP_LED_Init(LED2);
+	BSP_LED_Off(LED2);
+	uint32_t PrevTicks = HAL_GetTick();
+	int statusCount = 2000;
+	int isSetup = 0;
+
 	while(1){
+		//Begins tick counts for LED flashes
+		uint32_t CurrTicks = HAL_GetTick();
+
+		if((CurrTicks - PrevTicks) >= statusCount){
+			PrevTicks = CurrTicks;
+			BSP_LED_Toggle(LED2);
+		}
+
 		//Check if there is a message in the receiving buffer
 		if(haveMessage(&RX)){
 			//Create string to hold incoming message
@@ -50,13 +65,14 @@ int main(void)
 
 			//Verify initial messages are responses
 			char responseType[] = "Response";
-			char result[300];
+			char result[300] = "";
 			GetNameValue(input, responseType, result);
 			unsigned int Mask = BridgeResponseID(result);
 
-			char JSONStr1[300];
-			char JSONStr2[300];
-			char message[300];
+			char JSONStr1[300] = "";
+			char JSONStr2[300] = "";
+			char JSONStr3[300] = "";
+			char message[300] = "";
 
 			//Check message for corresponding response message
 			switch(Mask){
@@ -76,13 +92,16 @@ int main(void)
 							pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "WifiSetup", "Wifi", "SSID","ece631Lab", "Password", "stm32IOT!");
 						}
 						//Setup and connected, send "MQTTSetup" - if isGWPingable is true
-						else if(strstr(JSONStr2, "true")){
+						else if(strstr(JSONStr2, "true") && isSetup == 0){
 							//Formats string as {"Action":"MQTTSetup","MQTT":{"Host":"192.168.1.222","Port":"1883"}}
 							pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTSetup", "MQTT", "Host","192.168.1.222", "Port", "1883");
+							statusCount = 5000;
+							isSetup = 1;
 						}
-						//Setup but not connected - if isGWPingable is false
+						//Setup but not connected - if isGWPingable is falseece
 						else{
-							printf("Connection failed. Reconnecting...\n");
+							//message = "Connection failed. Reconnecting...\n";
+							//SendCharArrayUSART4(text,strlen(text));
 						}
 					break;
 				}
@@ -92,12 +111,14 @@ int main(void)
 						GetNameValue(input, "Message", JSONStr1); //Grab string within first brackets of JSON
 						GetNameValue(JSONStr1, "MQTT", JSONStr2); //Grab string within second brackets of JSON
 					//Action:"MQTTSubs"
-						if(strstr(JSONStr2, "Success")){
+						if(strstr(JSONStr2, "Success Pub ")){
 							//Formats string as {"Action":"MQTTSubs","MQTT":{"Topics":["ece631/Topic1","ece631/Topic2","ece631/etc"]}}
-							pack_json("{s:s,s:{s:[s,s,s]}}", message, "Action", "MQTTSubs", "MQTT", "Topics","ece631/Topic1", "ece631/Topic2", "ece631/etc");
+							pack_json("{s:s,s:{s:[s]}}", message, "Action", "MQTTSubs", "MQTT", "Topics","ece631/Topic1");
+							statusCount = 1000;
 						}
 						else{
-							printf("Could not confirm subscription\n");
+							//message = "Could not confirm subscription\n";
+							//SendCharArrayUSART4(text,strlen(text));
 						}
 					break;
 				}
@@ -105,12 +126,21 @@ int main(void)
 					//Response:
 					//Action:
 					break;
-				}
+				}*/
 				case MQTTSubs:{
 					//Response:"MQTTSubs" Subscribed
+						//Formatted as {"Response":"MQTTSubs","Message":{"MQTT":"{\"Action\":\"Subscribed\",\"Topics\":[\"ece631/Topic1\",\"ece631/Topic2\",\"ece631/etc\"]}"}}
+						GetNameValue(input, "Message", JSONStr1); //Grab string within first brackets of JSON
+						GetNameValue(JSONStr1, "MQTT", JSONStr2); //Grab string within second brackets of JSON
+						GetNameValue(JSONStr2, "Action", JSONStr3); //Grab string within third brackets of JSON
 					//Action:
+						if(strstr(JSONStr3, "Subscribed")){
+							statusCount = 500;
+							//Formats string as {"Action":"MQTTPub","MQTT":{"Topic":"Topic String","Message":"Needs to Be JSON String"}}
+							pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTPub", "MQTT", "Topic", "ece631/Topic1", "Message", "Please give me an A");
+						}
 					break;
-				}*/
+				}
 				case SubscribedMessage:{
 					//Response:
 						//Formatted as {"Response":"SubscribedMessage","Message":{"MQTT":"String Probably JSON"}}
@@ -118,11 +148,12 @@ int main(void)
 						GetNameValue(JSONStr1, "MQTT", JSONStr2); //Grab string within second brackets of JSON
 					//Action:
 						//Formats string as {"Action":"MQTTPub","MQTT":{"Topic":"Topic String","Message":"ObtainedMessage"}}
-						pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTPub", "MQTT", "Topic", "loopback.json", "Message", JSONStr2);
+						pack_json("{s:s,s:{s:s,s:s}}", message, "Action", "MQTTPub", "MQTT", "Topic", "ece631/loopback", "Message", "Loopity loop");
 					break;
 				}
 				default:{
-					printf("Invalid response ID received\n");
+					//message = "Invalid response ID received\n";
+					//SendCharArrayUSART4(text,strlen(text));
 					break;
 				}
 			}
